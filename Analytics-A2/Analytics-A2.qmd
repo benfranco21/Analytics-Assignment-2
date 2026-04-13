@@ -155,11 +155,9 @@ $$ Both $A^u_2$ and $A^v_2$ are $1 \times N$ matrices.
 
 **Output Layer:** - Combine $A^u_2$ and $A^v_2$ (e.g., stack to form a $2 \times N$ matrix) - $W_3$: Output weights ($q \times 2$) - $b_3$: Output bias ($q \times 1$)
 
-$$
-Z^L = W_3 \begin{bmatrix} A^u_2 \\ A^v_2 \end{bmatrix} + b_3
-$$ $$
-Y = \text{softmax}(Z^L)
-$$
+$$Z^L = W_3 \begin{bmatrix} A^u_2 \\ A^v_2 \end{bmatrix} + b_3$$
+
+$$Y = \text{softmax}(Z^L)$$
 
 **Mapping to Standard Network:**
 
@@ -189,4 +187,20 @@ The split-brain network can be written as a standard $(2m, 2)$-network by concat
 | Output   | $Y$     | $q \times N$   |
 
 **Conclusion:**\
-This structure shows how the split-brain network can be evaluated as a standard $(2m, 2)$-network, with appropriate expressions and matrix structures for each layer. The key is to keep the hemispheres separate in the first two layers, then combine their activations for the output layer, all within standard matrix-form updating equations. \`\`
+This structure shows how the split-brain network can be evaluated as a standard $(2m, 2)$-network, with appropriate expressions and matrix structures for each layer. The key is to keep the hemispheres separate in the first two layers, then combine their activation for the output layer, all within standard matrix-form updating equations.
+
+### 1e.)
+
+```{r}
+X_u = cbind(data$AveSpeed, data$Sex)
+X_v = cbind(data$Fluid, data$Carbs)
+
+colnames(X_u) = c("AveSpeed", "Sex")
+colnames(X_v) = c("Fluid", "Carbs")
+
+```
+### 1f.)
+```{r}
+
+```
+
