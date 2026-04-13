@@ -4,23 +4,189 @@ format: pdf
 editor: visual
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
 ```{r}
-1 + 1
+
+library(ggplot2)
+library(dplyr)
+
+
 ```
 
-You can add options to executable code like this
+### 1a.)
 
 ```{r}
-#| echo: false
-2 * 2
+# Read the data from the text file
+data <- read.table("HittingTheWall_2026.txt", header = TRUE)
+
+# Quick check: look at the first few rows
+head(data)
+
+
+#Box Plot of Bombed Vs. Carb intake
+ggplot(data, aes(x = Bombed, y = Carbs, fill = Bombed))+
+  geom_boxplot() +
+  labs(title = "Carbs Intake Vs. Bombed", x = "Bombed", y = "Carbs (g/h)")
+
+#Box Plot of Bombed Vs. Fluid intake
+ggplot(data, aes(x = Bombed, y = Fluid, fill = Bombed)) +
+  geom_boxplot() +
+  labs(title = "Fluid Intake Vs. Bombed", x = "Bombed", y = "Fluids (l/h)")
+
+#Bar Graph of Bombed Vs. Sex intake
+
+prop_bombed <- data %>%
+  group_by(Sex) %>%
+  summarise(Proportion = mean(Bombed == "TRUE"))
+
+
+ggplot(prop_bombed, aes(x = factor(Sex), y = Proportion, fill = factor(Sex))) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(Proportion, 2)), vjust = -0.5, size = 5) +
+  labs(title = "Proportion Bombed by Sex",
+       x = "Sex (0 = Female, 1 = Male)",
+       y = "Proportion Bombed") +
+  ylim(0, 1)
+
+
+#Scatter Plot of Carbs Vs. Fluids Intake by Bombed
+
+ggplot(data, aes(x=Carbs, y=Fluid, color=Bombed)) +
+  geom_point(alpha=0.7) +
+  labs(title="Carbs vs Fluid Intake by Bombed", x="Carbs (g/h)", y="Fluid (l/h)")
+
+#Box Plot Average Speed Vs. Bombed
+
+ggplot(data, aes(x=Bombed, y=AveSpeed, fill=Bombed)) +
+  geom_boxplot() +
+  labs(title="AveSpeed vs Bombed", y="AveSpeed (km/h)", x="Bombed")
+
+
+plot(Carbs~ Bombed, data = data)
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+## Interpretation: Rough
+
+We can see that bombing out during a race is a result of a lower carb intake per hour. The same for Fluids, bombing out is more likely to happen with a lower intake of fluids per hour. We can see that a high proportion of males, at 67% compare to 57% of females, bomb out during the race. When it comes to average speed, there isnt much of an impact as both bombing out and not bombing out have a very similar mean of average speed. If you had to make a decision, slightly lower speeds lead to a runner not bombing out.
+
+AI Paragraph:
+
+Exploratory data analysis revealed that runners who bombed out during the race tended to have lower carbohydrate and fluid intake per hour, as shown by the boxplots. The bar plot of Sex indicates that a higher proportion of males (67%) bombed compared to females (57%). Average speed did not show a strong relationship with bombing out, as both groups had similar mean speeds. The relationships between nutrition variables and bombing are not strictly linear, with overlapping distributions and possible threshold effects. These findings suggest that a nonlinear model, such as a neural network, is appropriate for capturing the complexity of the data.
+
+AI Interpreation:
+
+Exploratory data analysis reveals several important patterns in the dataset:
+
+Carbohydrate Intake: The boxplot of Carbs intake versus Bombed status shows that runners who bombed out during the race tended to have lower carbohydrate intake per hour. There appears to be a threshold effect, where bombing is much more likely below a certain level of carb intake, supporting the need for a nonlinear model.
+
+Fluid Intake: Similarly, the boxplot for Fluid intake indicates that bombing out is associated with lower fluid intake per hour. The relationship is not strictly linear, as there is considerable overlap and possible threshold effects.
+
+Sex: The bar plot of Bombed proportion by Sex demonstrates that a higher proportion of males (67%) bombed compared to females (57%). This suggests that sex may play a role in the likelihood of bombing, and potential interactions should be considered.
+
+Average Speed: The boxplot for AveSpeed shows little difference between bombed and non-bombed groups, indicating that average speed is not a strong predictor of bombing out in this sample.
+
+Interactions: The scatterplot of Carbs vs. Fluid intake colored by Bombed suggests that combinations of low carbs and low fluids are particularly associated with bombing, hinting at possible interaction effects.
+
+Conclusion: The relationships between nutrition variables and bombing are not strictly linear, with overlapping distributions, threshold effects, and potential interactions. These findings suggest that a nonlinear model, such as a neural network, is appropriate for capturing the complexity of the data and providing more accurate predictions.
+
+### 1b.)
+
+Equation 1: $\sigma(z_j) = \frac{\exp(z_j)}{\sum_{i=1}^q \exp(z_i)}$.
+
+Equation 2: $\sigma(z_j) = \frac{\exp(z_j - z^*)}{\sum_{i=1}^q \exp(z_i - z^*)}$. where $z^* = \max{z_1, z_2, \ldots, z_q} )$.
+
+Expanding the numerator and denominator:
+
+$\exp(z_j - z^*) =* \exp(z_j) \cdot \exp(-z^*)$.
+
+$\sum_{i=1}^q \exp(z_i - z^*) = \sum_{i=1}^q \exp(z_i) \cdot \exp(-z^*)$.
+
+Putting it all together:
+
+$\sigma(z_j) = \frac{\exp(z_j) \exp(-z^*)}{\sum_{i=1}^q \exp(z_i) \exp(-z^*)} = \frac{\exp(z_j)}{\sum_{i=1}^q \exp(z_i)}$.
+
+Thus, Equation 1 and Equation 2 are mathematically equivalent.
+
+**Numerical Stability:** Subtracting the maximum logit ( $z^*$ ) ensures that the largest exponent is zero and all others are negative, preventing overflow in the exponential calculation. This makes the softmax calculation robust and reliable for all input values. This is especially important in neural networks and deep learning, where logits can be very large or very small.
+
+### 1c.)
+
+```{r}
+
+softmax = function(X){
+ max = apply(X, 2, max)
+ X_centered = X
+ for (i in 1:ncol(X)){
+   X_centered[,i] = X[,i]-max[i]
+ }
+ 
+ exp_X = exp(X_centered)
+ 
+ probs = exp_X
+ col_sums = colSums(exp_X)
+ for (i in 1:ncol(exp_X)){
+   probs[,1] = exp_X[,i]/col_sums[i]
+ }
+ 
+ return(probs)
+}
+
+
+```
+
+### 1d.) Split-Brain Network: Matrix Form and Standard Representation
+
+**Inputs:** - $X^u$: Demographic input matrix ($p^u \times N$) - $X^v$: Nutrition input matrix ($p^v \times N$)
+
+**First Hidden Layer (Split):** - $W^u_1$: Weights for $u$-hemisphere ($m \times p^u$) - $b^u_1$: Biases for $u$-hemisphere ($m \times 1$) - $W^v_1$: Weights for $v$-hemisphere ($m \times p^v$) - $b^v_1$: Biases for $v$-hemisphere ($m \times 1$)
+
+**Activations:** $$
+A^u_1 = \tanh(W^u_1 X^u + b^u_1)
+$$ $$
+A^v_1 = \tanh(W^v_1 X^v + b^v_1)
+$$ Both $A^u_1$ and $A^v_1$ are $m \times N$ matrices.
+
+**Second Hidden Layer (Split):** - $W^u_2$: Weights for $u$-hemisphere ($1 \times m$) - $b^u_2$: Bias for $u$-hemisphere ($1 \times 1$) - $W^v_2$: Weights for $v$-hemisphere ($1 \times m$) - $b^v_2$: Bias for $v$-hemisphere ($1 \times 1$)
+
+**Activations:** $$
+A^u_2 = \tanh(W^u_2 A^u_1 + b^u_2)
+$$ $$
+A^v_2 = \tanh(W^v_2 A^v_1 + b^v_2)
+$$ Both $A^u_2$ and $A^v_2$ are $1 \times N$ matrices.
+
+**Output Layer:** - Combine $A^u_2$ and $A^v_2$ (e.g., stack to form a $2 \times N$ matrix) - $W_3$: Output weights ($q \times 2$) - $b_3$: Output bias ($q \times 1$)
+
+$$
+Z^L = W_3 \begin{bmatrix} A^u_2 \\ A^v_2 \end{bmatrix} + b_3
+$$ $$
+Y = \text{softmax}(Z^L)
+$$
+
+**Mapping to Standard Network:**
+
+The split-brain network can be written as a standard $(2m, 2)$-network by concatenating the two input matrices and defining block-diagonal weight matrices for the first hidden layer, so that each block only receives its designated subset of inputs. The forward pass equations can be written in standard matrix notation, with clear shapes for each matrix.
+
+**Summary Table of Dimensions:**
+
+| Layer    | Matrix  | Dimensions     |
+|----------|---------|----------------|
+| Input    | $X^u$   | $p^u \times N$ |
+| Input    | $X^v$   | $p^v \times N$ |
+| Hidden 1 | $W^u_1$ | $m \times p^u$ |
+| Hidden 1 | $W^v_1$ | $m \times p^v$ |
+| Hidden 1 | $b^u_1$ | $m \times 1$   |
+| Hidden 1 | $b^v_1$ | $m \times 1$   |
+| Hidden 1 | $A^u_1$ | $m \times N$   |
+| Hidden 1 | $A^v_1$ | $m \times N$   |
+| Hidden 2 | $W^u_2$ | $1 \times m$   |
+| Hidden 2 | $W^v_2$ | $1 \times m$   |
+| Hidden 2 | $b^u_2$ | $1 \times 1$   |
+| Hidden 2 | $b^v_2$ | $1 \times 1$   |
+| Hidden 2 | $A^u_2$ | $1 \times N$   |
+| Hidden 2 | $A^v_2$ | $1 \times N$   |
+| Output   | $W_3$   | $q \times 2$   |
+| Output   | $b_3$   | $q \times 1$   |
+| Output   | $Z^L$   | $q \times N$   |
+| Output   | $Y$     | $q \times N$   |
+
+**Conclusion:**\
+This structure shows how the split-brain network can be evaluated as a standard $(2m, 2)$-network, with appropriate expressions and matrix structures for each layer. The key is to keep the hemispheres separate in the first two layers, then combine their activations for the output layer, all within standard matrix-form updating equations. \`\`
