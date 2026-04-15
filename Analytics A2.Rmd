@@ -86,22 +86,31 @@ data <- read.table("HittingTheWall_2026.txt", header = TRUE)
 
 
 # Set up a 2 x 2 plotting grid
-par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+
+par(
+  mfrow = c(2, 2),          # 2x2 grid
+  mar   = c(4, 4, 3, 1),    # bottom, left, top, right margins
+  oma   = c(0, 0, 2, 0),    # outer margins for overall title
+  cex.main = 0.8,          # smaller plot titles
+  cex.lab  = 0.8,          # axis label size
+  cex.axis = 0.9            # axis tick label size
+)
+
 
 # 1. Boxplot: Carbs vs Bombed
 boxplot(Carbs ~ Bombed,
         data = data,
         col = c("blue", "red"),
-        main = "Carbohydrate Intake by Bombing Status",
+        main = "Carbohydrate Intake Vs. Bombed",
         xlab = "Bombed",
-        ylab = "Carbohydrate intake (g/h)",
+        ylab = "Carbintake (g/h)",
         border = "black")
 
 # 2. Boxplot: Fluid vs Bombed
 boxplot(Fluid ~ Bombed,
         data = data,
-        col = c("#4E79A7", "#E15759"),
-        main = "Fluid Intake by Bombing Status",
+        col = c("blue", "red"),
+        main = "Fluid Intake Vs. Bombed",
         xlab = "Bombed",
         ylab = "Fluid intake (L/h)",
         border = "black")
@@ -109,7 +118,7 @@ boxplot(Fluid ~ Bombed,
 # 3. Boxplot: AveSpeed vs Bombed
 boxplot(AveSpeed ~ Bombed,
         data = data,
-        col = c("#4E79A7", "#E15759"),
+        col = c("blue", "red"),
         main = "Average Speed by Bombing Status",
         xlab = "Bombed",
         ylab = "Average speed (km/h)",
@@ -119,7 +128,7 @@ boxplot(AveSpeed ~ Bombed,
 prop_bombed <- tapply(data$Bombed == "TRUE", data$Sex, mean)
 
 barplot(prop_bombed,
-        col = c("#76B7B2", "#F28E2B"),
+        col = c("blue", "red"),
         ylim = c(0, 1),
         main = "Proportion Bombed by Sex",
         xlab = "Sex",
@@ -133,7 +142,7 @@ text(x = c(0.7, 1.9),
      pos = 3)
 
 # Optional overall title
-mtext("Exploratory Data Analysis of Bombing Risk", outer = TRUE, cex = 1.2, font = 2)
+mtext("Exploratory Data Analysis of Bombing Risk", outer = TRUE, cex = 1, font = 2)
 ```
 
 Exploratory data analysis reveals several important patterns in the dataset:
