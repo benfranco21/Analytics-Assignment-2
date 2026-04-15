@@ -78,8 +78,6 @@ a.  Conduct an EDA by plotting input-response relationships and comment on wheth
 
 \vspace{0.2cm}
 
-
-
 ```{r echo=TRUE, fig.width=4, fig.height=4, out.width="80%"}
 # Read the data from the text file
 data <- read.table("HittingTheWall_2026.txt", header = TRUE)
@@ -155,8 +153,7 @@ Sex: The bar plot of Bombed proportion by Sex demonstrates that a higher proport
 
 Average Speed: The boxplot for AveSpeed shows little difference between bombed and non-bombed groups, indicating that average speed is not a strong predictor of bombing out in this sample.
 
-The relationships between nutrition variables and bombing are not strictly linear, with overlapping distributions, threshold effects, and potential interactions. These findings suggest that a nonlinear model, such as a neural network, is appropriate for capturing the complexity of the data and providing more accurate predictions.
-\newpage
+The relationships between nutrition variables and bombing are not strictly linear, with overlapping distributions, threshold effects, and potential interactions. These findings suggest that a nonlinear model, such as a neural network, is appropriate for capturing the complexity of the data and providing more accurate predictions. \newpage
 
 b.  
 

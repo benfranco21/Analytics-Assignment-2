@@ -192,15 +192,153 @@ This structure shows how the split-brain network can be evaluated as a standard 
 ### 1e.)
 
 ```{r}
-X_u = cbind(data$AveSpeed, data$Sex)
-X_v = cbind(data$Fluid, data$Carbs)
+Xu = t(cbind(data$AveSpeed, data$Sex))
+Xv = t(cbind(data$Fluid, data$Carbs))
 
-colnames(X_u) = c("AveSpeed", "Sex")
-colnames(X_v) = c("Fluid", "Carbs")
+rownames(Xu) = c("AveSpeed", "Sex")
+rownames(Xv) = c("Fluid", "Carbs")
+
+Y = cbind(as.numeric(data$Bombed), as.numeric(!data$Bombed))
 
 ```
+
 ### 1f.)
-```{r}
 
+```{r}
 ```
 
+### 1g.)
+
+```{r}
+Split_Brain_net = function(Xu, Xv, Y, theta, m ,nu){
+  #Dimensions
+  N = ncol(Xu)
+  pu = nrow(Xu)
+  pv = nrow(Xv)
+  q = ncol(Y)
+  dims_u = c(pu, m, 1)
+  dims_v = c(pv, m, 1)
+  
+  #Populate weight matrices + biases
+  index = 1 : (dims_u[1] * dims_u[2])
+  W1u = matrix(theta[index], dims_u[1], dims_u[2])
+  
+  index = max(index) + 1:(dims_v[1] * dims_v[2])
+  W1v = matrix(theta[index], dims_v[1], dims_v[2])
+  
+  index = max(index) + 1:(dims_u[2] * dims_u[3])
+  W2u = matrix(theta[index], dims_u[2], dims_u[3])
+  
+  index = max(index) + 1:(dims_v[2] * dims_v[3])
+  W2v = matrix(theta[index], dims_v[2], dims_v[3])
+  
+  index = max(index) + 1:(2*q)
+  W3 = matrix(theta[index], 2, q)
+  
+  index = max(index) + 1:(dim_u[2])
+  b1u <- matrix(theta[index], dims_u[2], 1)
+  
+  index <- max(index) + 1:(dims_v[2])
+  b1v <- matrix(theta[index], dims_v[2], 1)
+  
+  index <- max(index) + 1:(dims_u[3])
+  b2u <- matrix(theta[index], dims_u[3], 1)
+  
+  index <- max(index) + 1:(dims_v[3])
+  b2v <- matrix(theta[index], dims_v[3], 1)
+  
+  index <- max(index) + 1:q
+  b3 <- matrix(theta[index], q, 1)
+  
+  #Evaluate Network
+  ones = matrix(1,N,1)
+  
+  A1u = tanh(t(W1u) %*% Xu + b1u %*% t(ones))
+  A1v = tanh(t(W1v) %*% Xv + b1u %*% t(ones))
+  A2u = tanh(t(W2u) %*% A1u + b2u %*% t(ones))
+  A2v = tanh(t(W2v) %*% A2v + b2v %*% t(ones))
+  A3 = softmax(t(W3) %*% rbind(A2u, A2v) + b3 %*% t(ones))
+  
+  yhat = t(A3)
+  
+  eps = 1e-8
+  E1 = -sum(Y * log(Yhat*eps))
+  E2 = E1/N + nu/N * (sum(W1u^2) + sum(W1v^2) + sum(W2u^2) + sum(W2v^2) + sum(W3^2))
+  
+  return(list(A1u = A1u, A1v = A1v, A2u = A2u, A2v = A2v, A2 = rbind(A2u, A2v), yhat = yhat, E1 = E1, E2 = E2))
+
+
+}
+
+#Function to use later for optim, extracting error
+split_brain_obj <- function( Xu, Xv, Y,theta, m, nu) {
+  Split_Brain_net(Xu, Xv, Y, theta, m, nu)$E2
+}
+```
+
+###1h.)
+```{r}
+set.seed(2026)
+#Split data in Train and Validate
+idx = floor(0.8 * ncol(Xu))
+Xu_train = Xu[,1:idx]
+Xv_train = Xu[,1:idx]
+Y_train = Y[1:idx,]
+Xu_val = Xu[,idx:ncol(Xu)]
+Xv_val = Xv[,idx:ncol(Xv)]
+Y_val = Y[idx:nrow(Y),]
+
+#Model dimensions
+m = 4
+pu = nrow(Xu_train)
+pv = nrow(Xv_train)
+q = ncol(Y_train)
+
+#Number of Parameters Function
+n_theta = function(pu, pv, m, q){
+  (pu + pv + 4) * m + 3*q + 2
+}
+param = n_theta(pu,pv,m,q)
+
+#Fixed Initial Parameter vector
+theta_initial = rnorm(param, sd=0.1)
+
+#Grid of regularisation values
+n = 20
+nu_grid = exp(seq(-5,3, length = n))
+
+#storage objects
+val_error = numeric(n)
+train_error = numeric(n)
+fits = vector("list", n)
+
+#Validation loop
+for (i in seq_along(nu_grid)){
+  nu = nu_grid[i]
+  
+  #Fit model on trianing data
+  fit = optim(par = theta_initial, fn = split_brain_obj, Xu = Xu_train, Xv = Xv_train, Y = Y_train, m = m, 
+              nu = nu, method = "BFGS", control = list(maxit = 1000, reltol = 1e-8))
+  
+  fits[i] = fit
+  
+  train_eval = Split_Brain_net(Xu = Xu_train, Xv = Xv_train, Y = Y_train, theta = fit$par, m = m, nu = 0)
+  
+  train_error[i] = train_eval$E1 / ncol(Xu_train)
+  
+  val_eval = Split_Brain_net(Xu = Xu_val, Xv = Xv_val, Y = Y_val, theta = fit$par, m = m, nu = 0)
+  
+  val_error[i] = val_eval$E1 / ncol(Xu_val)
+}
+
+best_index = which.min(val_error)
+best_nu = nu_grid[best_index]
+
+
+
+
+
+
+
+
+```
