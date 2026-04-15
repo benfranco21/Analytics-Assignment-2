@@ -31,107 +31,131 @@ header-includes:
   - \lhead{Analytics A2}
   - \cfoot{\thepage}
 ---
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
 library(ggplot2)
 library(dplyr)
+library(patchwork)
 ```
+
+```{=tex}
 \begin{titlepage}
-	\centering
+    \centering
     % Ensure uct-logo.png is in your working directory or provide the full path
     \includegraphics[width = 6cm]{uct-logo.png}\\[1.0 cm]
     \vspace*{0.5 cm}
     \textsc{\LARGE University of Cape Town}\\[2.0 cm]
-	\textsc{\Large STA4010W}\\[0.5 cm]
-	\textsc{\large Analytics}\\[0.5 cm]
-	\rule{\linewidth}{0.2 mm} \\[0.4 cm]
-	{ \huge \bfseries Assessment 2: Neural Networks}\\
-	\rule{\linewidth}{0.2 mm} \\[1.5 cm]
-	
-	\begin{minipage}{0.4\textwidth}
-		\begin{flushleft} \large
-			\emph{Author:}\\
-			Ethon Felix \\
-			Benjamin Franco
-			\end{flushleft}
-			\end{minipage}~
-			\begin{minipage}{0.4\textwidth}
-			\begin{flushright} \large
-			\emph{Student Number:} \\
-			FLXETH002 \\
-			FRNBEN003
-		\end{flushright}
-	\end{minipage}\\[2 cm]
-	
-	{\large 20 April 2026}\\[2 cm]
-	\vfill
+    \textsc{\Large STA4010W}\\[0.5 cm]
+    \textsc{\large Analytics}\\[0.5 cm]
+    \rule{\linewidth}{0.2 mm} \\[0.4 cm]
+    { \huge \bfseries Assessment 2: Neural Networks}\\
+    \rule{\linewidth}{0.2 mm} \\[1.5 cm]
+    
+    \begin{minipage}{0.4\textwidth}
+        \begin{flushleft} \large
+            \emph{Author:}\\
+            Ethon Felix \\
+            Benjamin Franco
+            \end{flushleft}
+            \end{minipage}~
+            \begin{minipage}{0.4\textwidth}
+            \begin{flushright} \large
+            \emph{Student Number:} \\
+            FLXETH002 \\
+            FRNBEN003
+        \end{flushright}
+    \end{minipage}\\[2 cm]
+    
+    {\large 20 April 2026}\\[2 cm]
+    \vfill
 \end{titlepage}
-
-\newpage
-
-a. Conduct an EDA by plotting input-response relationships and comment on whether a neural network is an appropriate model class.
-
-\vspace{0.2cm}
-
-```{r echo=TRUE}
-# Read the data from the text file
-data <- read.table("HittingTheWall_2026.txt", header = TRUE)
-
-# Quick check: look at the first few rows
-#head(data)
-
-
-# Box Plot of Bombed Vs. Carb intake
-p1 <- ggplot(data, aes(x = Bombed, y = Carbs, fill = Bombed))+
-  geom_boxplot() +
-  labs(title = "Carbs Intake Vs. Bombed", x = "Bombed", y = "Carbs (g/h)")
-
-# Box Plot of Bombed Vs. Fluid intake
-p2 <- ggplot(data, aes(x = Bombed, y = Fluid, fill = Bombed)) +
-  geom_boxplot() +
-  labs(title = "Fluid Intake Vs. Bombed", x = "Bombed", y = "Fluids (l/h)")
-
-# Bar Graph of Bombed Vs. Sex intake
-
-prop_bombed <- data %>%
-  group_by(Sex) %>%
-  summarise(Proportion = mean(Bombed == "TRUE"))
-
-
-p3 <- ggplot(prop_bombed, aes(x = factor(Sex), y = Proportion, fill = factor(Sex))) +
-  geom_bar(stat = "identity") +
-  geom_text(aes(label = round(Proportion, 2)), vjust = -0.5, size = 5) +
-  labs(title = "Proportion Bombed by Sex",
-       x = "Sex (0 = Female, 1 = Male)",
-       y = "Proportion Bombed") +
-  ylim(0, 1)
-
-
-# Scatter Plot of Carbs Vs. Fluids Intake by Bombed
-
-p4 <- ggplot(data, aes(x=Carbs, y=Fluid, color=Bombed)) +
-  geom_point(alpha=0.7) +
-  labs(title="Carbs vs Fluid Intake by Bombed", x="Carbs (g/h)", y="Fluid (l/h)")
-
-# Box Plot Average Speed Vs. Bombed
-
-p5 <- ggplot(data, aes(x=Bombed, y=AveSpeed, fill=Bombed)) +
-  geom_boxplot() +
-  labs(title="AveSpeed vs Bombed", y="AveSpeed (km/h)", x="Bombed")
-
-p6 <- plot(Carbs~ Bombed, data = data)
 ```
 \newpage
 
-b. 
+a.  Conduct an EDA by plotting input-response relationships and comment on whether a neural network is an appropriate model class.
 
-To show that 
+\vspace{0.2cm}
+
+
+
+```{r echo=TRUE, fig.width=4, fig.height=4, out.width="80%"}
+# Read the data from the text file
+data <- read.table("HittingTheWall_2026.txt", header = TRUE)
+
+
+# Set up a 2 x 2 plotting grid
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+
+# 1. Boxplot: Carbs vs Bombed
+boxplot(Carbs ~ Bombed,
+        data = data,
+        col = c("blue", "red"),
+        main = "Carbohydrate Intake by Bombing Status",
+        xlab = "Bombed",
+        ylab = "Carbohydrate intake (g/h)",
+        border = "black")
+
+# 2. Boxplot: Fluid vs Bombed
+boxplot(Fluid ~ Bombed,
+        data = data,
+        col = c("#4E79A7", "#E15759"),
+        main = "Fluid Intake by Bombing Status",
+        xlab = "Bombed",
+        ylab = "Fluid intake (L/h)",
+        border = "black")
+
+# 3. Boxplot: AveSpeed vs Bombed
+boxplot(AveSpeed ~ Bombed,
+        data = data,
+        col = c("#4E79A7", "#E15759"),
+        main = "Average Speed by Bombing Status",
+        xlab = "Bombed",
+        ylab = "Average speed (km/h)",
+        border = "black")
+
+# 4. Barplot: Proportion bombed by Sex
+prop_bombed <- tapply(data$Bombed == "TRUE", data$Sex, mean)
+
+barplot(prop_bombed,
+        col = c("#76B7B2", "#F28E2B"),
+        ylim = c(0, 1),
+        main = "Proportion Bombed by Sex",
+        xlab = "Sex",
+        ylab = "Proportion bombed",
+        border = "black")
+
+# Add labels above bars
+text(x = c(0.7, 1.9),
+     y = prop_bombed,
+     labels = round(prop_bombed, 2),
+     pos = 3)
+
+# Optional overall title
+mtext("Exploratory Data Analysis of Bombing Risk", outer = TRUE, cex = 1.2, font = 2)
+```
+
+Exploratory data analysis reveals several important patterns in the dataset:
+
+Carbohydrate Intake: The boxplot of Carbs intake versus Bombed status shows that runners who bombed out during the race tended to have lower carbohydrate intake per hour. There appears to be a threshold effect, where bombing is much more likely below a certain level of carb intake, supporting the need for a nonlinear model.
+
+Fluid Intake: Similarly, the boxplot for Fluid intake indicates that bombing out is associated with lower fluid intake per hour. The relationship is not strictly linear, as there is considerable overlap and possible threshold effects.
+
+Sex: The bar plot of Bombed proportion by Sex demonstrates that a higher proportion of males (67%) bombed compared to females (57%). This suggests that sex may play a role in the likelihood of bombing, and potential interactions should be considered.
+
+Average Speed: The boxplot for AveSpeed shows little difference between bombed and non-bombed groups, indicating that average speed is not a strong predictor of bombing out in this sample.
+
+The relationships between nutrition variables and bombing are not strictly linear, with overlapping distributions, threshold effects, and potential interactions. These findings suggest that a nonlinear model, such as a neural network, is appropriate for capturing the complexity of the data and providing more accurate predictions.
+\newpage
+
+b.  
+
+To show that
 
 $$
 \sigma(z_j) = \underbrace{\frac{\exp(z_j)}{\sum_{i=1}^q \exp(z_i)}}_\textbf{Eq. 1} =\underbrace{\frac{\exp(z_j - z^*)}{\sum_{i=1}^q \exp(z_i - z^*)}}_{\textbf{Eq. 2}} \quad \text{where } z^* = \max \{z_1,z_2,\dots,z_q\}
-$$
-\vspace{0.2cm}
+$$ \vspace{0.2cm}
 
 we start by expanding Equation 2 as follows
 
@@ -149,7 +173,7 @@ which shows that equations 1 and 2 are mathematically equivalent.
 
 Subtracting the maximum logit $(z^*)$ ensures that the largest exponent is zero and all others are negative, preventing overflow in the exponential calculation. This makes the softmax calculation robust and reliable for all input values. This is especially important in neural networks and deep learning, where logits can be very large or very small.
 
-c. 
+c.  
 
 ```{r echo=TRUE}
 softmax = function(X){
@@ -171,8 +195,7 @@ softmax = function(X){
 }
 ```
 
-
-d. 
+d.  
 
 **Inputs:** - $X^u$: Demographic input matrix ($p^u \times N$) - $X^v$: Nutrition input matrix ($p^v \times N$)
 
@@ -228,7 +251,7 @@ The split-brain network can be written as a standard $(2m, 2)$-network by concat
 **Conclusion:**\
 This structure shows how the split-brain network can be evaluated as a standard $(2m, 2)$-network, with appropriate expressions and matrix structures for each layer. The key is to keep the hemispheres separate in the first two layers, then combine their activation for the output layer, all within standard matrix-form updating equations.
 
-e. 
+e.  
 
 ```{r echo=TRUE}
 X_u = cbind(data$AveSpeed, data$Sex)
@@ -243,8 +266,7 @@ Y <- cbind(
 )
 ```
 
-
-f. We count parameters layer by layer
+f.  We count parameters layer by layer
 
 \vspace{0.2cm}
 
@@ -252,11 +274,11 @@ f. We count parameters layer by layer
 
 \vspace{0.2cm}
 
-- Layer 1: $(p_u + p_v)m$
+-   Layer 1: $(p_u + p_v)m$
 
-- Layer 2: $2m$
+-   Layer 2: $2m$
 
-- Output: $2q$
+-   Output: $2q$
 
 Thus the total weight are
 
@@ -268,13 +290,13 @@ $$
 
 **Biases:**
 
-- Layer 1: $2m$
+-   Layer 1: $2m$
 
-- Layer 2: $2$
+-   Layer 2: $2$
 
-- Output: $q$
+-   Output: $q$
 
-Thus total biases are 
+Thus total biases are
 
 \vspace{0.2cm}
 
@@ -294,9 +316,8 @@ $$
 \text{Total parameters} = (2+2+4)\cdot4 + 3(2) + 2 = 32 + 6 + 2 = 40
 $$
 
-g. 
+g.  
 
 ```{r}
 
 ```
-
