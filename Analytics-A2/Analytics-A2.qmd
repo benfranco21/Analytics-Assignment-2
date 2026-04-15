@@ -235,7 +235,7 @@ Split_Brain_net = function(Xu, Xv, Y, theta, m ,nu){
   index = max(index) + 1:(2*q)
   W3 = matrix(theta[index], 2, q)
   
-  index = max(index) + 1:(dim_u[2])
+  index = max(index) + 1:(dims_u[2])
   b1u <- matrix(theta[index], dims_u[2], 1)
   
   index <- max(index) + 1:(dims_v[2])
@@ -254,15 +254,15 @@ Split_Brain_net = function(Xu, Xv, Y, theta, m ,nu){
   ones = matrix(1,N,1)
   
   A1u = tanh(t(W1u) %*% Xu + b1u %*% t(ones))
-  A1v = tanh(t(W1v) %*% Xv + b1u %*% t(ones))
+  A1v = tanh(t(W1v) %*% Xv + b1v %*% t(ones))
   A2u = tanh(t(W2u) %*% A1u + b2u %*% t(ones))
-  A2v = tanh(t(W2v) %*% A2v + b2v %*% t(ones))
+  A2v = tanh(t(W2v) %*% A1v + b2v %*% t(ones))
   A3 = softmax(t(W3) %*% rbind(A2u, A2v) + b3 %*% t(ones))
   
   yhat = t(A3)
   
   eps = 1e-8
-  E1 = -sum(Y * log(Yhat*eps))
+  E1 = -sum(Y * log(yhat*eps))
   E2 = E1/N + nu/N * (sum(W1u^2) + sum(W1v^2) + sum(W2u^2) + sum(W2v^2) + sum(W3^2))
   
   return(list(A1u = A1u, A1v = A1v, A2u = A2u, A2v = A2v, A2 = rbind(A2u, A2v), yhat = yhat, E1 = E1, E2 = E2))
@@ -282,7 +282,7 @@ set.seed(2026)
 #Split data in Train and Validate
 idx = floor(0.8 * ncol(Xu))
 Xu_train = Xu[,1:idx]
-Xv_train = Xu[,1:idx]
+Xv_train = Xv[,1:idx]
 Y_train = Y[1:idx,]
 Xu_val = Xu[,idx:ncol(Xu)]
 Xv_val = Xv[,idx:ncol(Xv)]
@@ -320,7 +320,7 @@ for (i in seq_along(nu_grid)){
   fit = optim(par = theta_initial, fn = split_brain_obj, Xu = Xu_train, Xv = Xv_train, Y = Y_train, m = m, 
               nu = nu, method = "BFGS", control = list(maxit = 1000, reltol = 1e-8))
   
-  fits[i] = fit
+  fits[[i]] = fit
   
   train_eval = Split_Brain_net(Xu = Xu_train, Xv = Xv_train, Y = Y_train, theta = fit$par, m = m, nu = 0)
   
@@ -334,10 +334,8 @@ for (i in seq_along(nu_grid)){
 best_index = which.min(val_error)
 best_nu = nu_grid[best_index]
 
-
-
-
-
+plot(val_error~nu_grid, type = "l") 
+abline( v = best_nu, col = "red")
 
 
 
