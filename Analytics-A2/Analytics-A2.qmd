@@ -314,7 +314,7 @@ fits = vector("list", n)
 
 #Validation loop
 for (i in seq_along(nu_grid)){
-  nu = nu_grid[i]
+  nu = nu_grid[1]
   
   #Fit model on trianing data
   fit = optim(par = theta_initial, fn = split_brain_obj, Xu = Xu_train, Xv = Xv_train, Y = Y_train, m = m, 
@@ -322,13 +322,13 @@ for (i in seq_along(nu_grid)){
   
   fits[[i]] = fit
   
-  train_eval = Split_Brain_net(Xu = Xu_train, Xv = Xv_train, Y = Y_train, theta = fit$par, m = m, nu = 0)
+  train_eval = Split_Brain_net(Xu = Xu_train, Xv = Xv_train, Y = Y_train, theta = fit$par, m = m, nu = nu)
   
-  train_error[i] = train_eval$E1 / ncol(Xu_train)
+  train_error[i] = train_eval$E2 / ncol(Xu_train)
   
-  val_eval = Split_Brain_net(Xu = Xu_val, Xv = Xv_val, Y = Y_val, theta = fit$par, m = m, nu = 0)
+  val_eval = Split_Brain_net(Xu = Xu_val, Xv = Xv_val, Y = Y_val, theta = fit$par, m = m, nu = nu)
   
-  val_error[i] = val_eval$E1 / ncol(Xu_val)
+  val_error[i] = val_eval$E2 / ncol(Xu_val)
 }
 
 best_index = which.min(val_error)
@@ -336,7 +336,8 @@ best_nu = nu_grid[best_index]
 
 plot(val_error~nu_grid, type = "l") 
 abline( v = best_nu, col = "red")
-
-
+fits
+train_error
+val_error
 
 ```
