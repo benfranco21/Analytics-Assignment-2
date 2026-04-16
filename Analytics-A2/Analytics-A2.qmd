@@ -371,41 +371,33 @@ text(best_nu, best_val,
 ###1i.)
 ```{r}
 library(colorspace)
-
-# ---------------------------------------------------------
-# Colour gradient function (lecturer style)
-# ---------------------------------------------------------
+# Colour gradient
 color.gradient = function(x, colors = c("hotpink", "black", "cyan2"), colsteps = 50){
   colpal = colorRampPalette(colors)
   return(colpal(colsteps)[findInterval(x, seq(min(x), max(x), length = colsteps))])
 }
 
-# ---------------------------------------------------------
 # Best fitted parameters from Question 1(h)
-# ---------------------------------------------------------
+
 best_theta <- fits[[best_index]]$par
 
-# ---------------------------------------------------------
+
 # Create a grid over Fluid and Carbs
-# ---------------------------------------------------------
-M <- 100
-fluid_seq <- seq(min(data$Fluid), max(data$Fluid), length = M)
-carb_seq  <- seq(min(data$Carbs), max(data$Carbs), length = M)
 
-xx_fluid <- rep(fluid_seq, M)
-xx_carb  <- rep(carb_seq, each = M)
+M = 100
+fluid_seq = seq(min(data$Fluid), max(data$Fluid), length = M)
+carb_seq  = seq(min(data$Carbs), max(data$Carbs), length = M)
 
-# Fixed speed
-speed_fix <- 12
+xx_fluid = rep(fluid_seq, M)
+xx_carb  = rep(carb_seq, each = M)
+speed_fix = 12
 
-# Dummy Y matrix (required by your function, but not used for prediction)
-Y_dummy <- matrix(0, M^2, 2)
+# Dummy Y matrix 
+Y_dummy = matrix(0, M^2, 2)
 
-# ---------------------------------------------------------
 # Prediction grid for Sex = 0
-# ---------------------------------------------------------
-Xu_sex0 <- rbind(rep(speed_fix, M^2), rep(0, M^2))
-Xv_sex0 <- rbind(xx_fluid, xx_carb)
+Xu_sex0 = rbind(rep(speed_fix, M^2), rep(0, M^2))
+Xv_sex0 = rbind(xx_fluid, xx_carb)
 
 res_response0 <- Split_Brain_net(
   Xu = Xu_sex0,
@@ -416,13 +408,11 @@ res_response0 <- Split_Brain_net(
   nu = 0
 )
 
-# ---------------------------------------------------------
 # Prediction grid for Sex = 1
-# ---------------------------------------------------------
-Xu_sex1 <- rbind(rep(speed_fix, M^2), rep(1, M^2))
-Xv_sex1 <- rbind(xx_fluid, xx_carb)
+Xu_sex1 = rbind(rep(speed_fix, M^2), rep(1, M^2))
+Xv_sex1 = rbind(xx_fluid, xx_carb)
 
-res_response1 <- Split_Brain_net(
+res_response1 = Split_Brain_net(
   Xu = Xu_sex1,
   Xv = Xv_sex1,
   Y = Y_dummy,
@@ -431,9 +421,7 @@ res_response1 <- Split_Brain_net(
   nu = 0
 )
 
-# ---------------------------------------------------------
-# Plot coloured response maps
-# ---------------------------------------------------------
+#Plot Response Maps
 par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
 
 # Sex = 0
