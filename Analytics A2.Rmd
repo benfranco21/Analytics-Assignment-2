@@ -194,7 +194,7 @@ softmax = function(X){
  probs = exp_X
  col_sums = colSums(exp_X)
  for (i in 1:ncol(exp_X)){
-   probs[,1] = exp_X[,i]/col_sums[i]
+   probs[,i] = exp_X[,i]/col_sums[i]
  }
  
  return(probs)

@@ -279,7 +279,6 @@ split_brain_obj <- function(theta, Xu, Xv, Y, m, nu) {
 
 ###1h.)
 ```{r}
-
 set.seed(2026)
 
 N <- ncol(Xu)
@@ -367,6 +366,103 @@ text(best_nu, best_val,
      pos = 4,                 # text to the right
      col = "red",
      cex = 0.9)
+```
 
+###1i.)
+```{r}
+library(colorspace)
+
+# ---------------------------------------------------------
+# Colour gradient function (lecturer style)
+# ---------------------------------------------------------
+color.gradient = function(x, colors = c("hotpink", "black", "cyan2"), colsteps = 50){
+  colpal = colorRampPalette(colors)
+  return(colpal(colsteps)[findInterval(x, seq(min(x), max(x), length = colsteps))])
+}
+
+# ---------------------------------------------------------
+# Best fitted parameters from Question 1(h)
+# ---------------------------------------------------------
+best_theta <- fits[[best_index]]$par
+
+# ---------------------------------------------------------
+# Create a grid over Fluid and Carbs
+# ---------------------------------------------------------
+M <- 100
+fluid_seq <- seq(min(data$Fluid), max(data$Fluid), length = M)
+carb_seq  <- seq(min(data$Carbs), max(data$Carbs), length = M)
+
+xx_fluid <- rep(fluid_seq, M)
+xx_carb  <- rep(carb_seq, each = M)
+
+# Fixed speed
+speed_fix <- 12
+
+# Dummy Y matrix (required by your function, but not used for prediction)
+Y_dummy <- matrix(0, M^2, 2)
+
+# ---------------------------------------------------------
+# Prediction grid for Sex = 0
+# ---------------------------------------------------------
+Xu_sex0 <- rbind(rep(speed_fix, M^2), rep(0, M^2))
+Xv_sex0 <- rbind(xx_fluid, xx_carb)
+
+res_response0 <- Split_Brain_net(
+  Xu = Xu_sex0,
+  Xv = Xv_sex0,
+  Y = Y_dummy,
+  theta = best_theta,
+  m = m,
+  nu = 0
+)
+
+# ---------------------------------------------------------
+# Prediction grid for Sex = 1
+# ---------------------------------------------------------
+Xu_sex1 <- rbind(rep(speed_fix, M^2), rep(1, M^2))
+Xv_sex1 <- rbind(xx_fluid, xx_carb)
+
+res_response1 <- Split_Brain_net(
+  Xu = Xu_sex1,
+  Xv = Xv_sex1,
+  Y = Y_dummy,
+  theta = best_theta,
+  m = m,
+  nu = 0
+)
+
+# ---------------------------------------------------------
+# Plot coloured response maps
+# ---------------------------------------------------------
+par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+
+# Sex = 0
+plot(xx_carb ~ xx_fluid,
+     pch = 16, cex = 0.6,
+     col = color.gradient(res_response0$yhat[, 1]),
+     xlab = "Fluid intake (L/h)",
+     ylab = "Carbohydrate intake (g/h)",
+     main = "Predicted P(Bombed), Sex = 0")
+
+# Sex = 1
+plot(xx_carb ~ xx_fluid,
+     pch = 16, cex = 0.6,
+     col = color.gradient(res_response1$yhat[, 1]),
+     xlab = "Fluid intake (L/h)",
+     ylab = "Carbohydrate intake (g/h)",
+     main = "Predicted P(Bombed), Sex = 1")
 
 ```
+### 1j.)
+For the above plots, the colour gradient indicates lower and higher fitted probabilities of bombing, with the pink region corresponding to lower predicted bombing risk and the cyan region corresponding to higher predicted bombing risk.
+
+Female: We can see that there is a large area of pink, showing that a large proportion of females dont bomb out. we can see that a female with a low fluid intake but a high carb intake is liekly to not bomb out, the same for high fluid and lower carb. But for low carb and low fluid as well ass high card and high fluid she is likely to bomb out.
+
+Male: For males the prpotion of bombing out is much higher than females. with males needing to be around the mean for both fluid intake and carb intake in order to not bomb out. We can see the interaction for both extremeties of fluid and carb will lead to bombing out as well as if one is high and the other is low.
+
+AI:
+The colour gradient represents the fitted probability of bombing, with the pink region corresponding to a lower predicted probability of bombing and the cyan region corresponding to a higher predicted probability of bombing.
+
+For Females (0), there is a relatively large pink region, indicating that the model predicts a broad range of fluid–carbohydrate combinations associated with a lower probability of bombing. In particular, combinations involving moderate to high carbohydrate intake with lower fluid intake, as well as higher fluid intake with moderate carbohydrate intake, appear to lie in this lower-risk region. By contrast, combinations involving both low fluid and low carbohydrate intake, as well as more extreme combinations where both variables are simultaneously high, are associated with a higher predicted probability of bombing.
+
+For Males (1), the same general nonlinear pattern is present, but the pink region is noticeably smaller and more concentrated. This suggests that, according to the fitted model, the range of fluid and carbohydrate combinations associated with a lower probability of bombing is narrower for males than for females. In other words, the model indicates a smaller margin for error in fueling strategy for males, with bombing risk increasing more quickly as intake moves away from the central low-risk region
